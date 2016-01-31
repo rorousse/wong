@@ -1,0 +1,80 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: fcapocci <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2016/01/30 21:22:30 by fcapocci          #+#    #+#             */
+/*   Updated: 2016/01/31 14:30:37 by rorousse         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "game.h"
+
+static void		do_resize(int *tab, t_win *board, int lines, int cols)
+{
+	int		i;
+	int		x;
+	int		y;
+
+	i = -1;
+	while (i < 16)
+	{
+		x = (i % 4 == 0) ? 0 : 0;
+		x = (i % 4 == 1) ? cols : x;
+		x = (i % 4 == 2) ? (cols * 2) : x;
+		x = (i % 4 == 3) ? (cols * 3) : x;
+		y = (i / 4 == 0) ? 0 : 0;
+		y = (i / 4 == 1) ? lines : y;
+		y = (i / 4 == 2) ? (lines * 2) : y;
+		y = (i / 4 == 3) ? (lines * 3) : y;
+		delwin(board[i].my_win);
+		board[i].my_win = newwin(lines, cols, y, x);
+		if (tab[i])
+			mvprintw(y + (lines / 2), x + (cols / 2), "%d", tab[i]);
+		box(board[i].my_win, 0, 0);
+		wrefresh(board[i++].my_win);
+		refresh();
+	}
+	return ;
+}
+
+static void		init_ncurses(int *tab)
+{
+	fill_grid(tab);
+	generation(tab, 2);
+	initscr();
+	raw();
+	cbreak();
+	keypad(stdscr, TRUE);
+	noecho();
+	curs_set(FALSE);
+}
+
+int				main(void)
+{
+	int		ch;
+	int		**dtab;
+	int		*tab;
+
+	t_win	board[16];
+
+	ch = 1;
+	tab = (int*)malloc(sizeof(int) * 16);
+	dtab = ft_d_array(tab);
+	init_ncurses(tab);
+	while (ch != 27 && check_end(dtab) == 0)
+	{
+		clear();
+		do_resize(tab, board, LINES / 4, COLS / 4);
+		ch = getch();
+		if (ch == 261 || ch == 258 || ch == 260 || ch == 259)
+		{
+			if (move_grid(dtab, ch) == 1)
+				generation(tab, 1);
+		}
+	}
+	endwin();
+	return 0;
+}
